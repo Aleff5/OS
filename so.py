@@ -67,3 +67,25 @@ def iniciar_shell():
             print("Login realizado com sucesso!")
         else:
             print("Usuário ou senha incorretos. Tente novamente.")
+
+
+
+def listar_diretorio(diretorio=None):
+    if diretorio is None:
+        diretorio = os.getcwd()  
+    
+    try:
+        conteudo = os.listdir(diretorio)  
+        
+        if not conteudo:
+            print(f"O diretório '{diretorio}' está vazio.")
+        else:
+            print(f"Conteúdo de '{diretorio}':")
+            for item in conteudo:
+                print(item)
+    except FileNotFoundError:
+        print(f"O diretório '{diretorio}' não foi encontrado.")
+    except PermissionError:
+        print(f"Permissão negada para acessar o diretório '{diretorio}'.")
+
+
