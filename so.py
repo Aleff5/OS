@@ -2,6 +2,8 @@ import os
 import hashlib
 import getpass
 import json
+import random
+import string
 USUARIO_FILE = "Usuarios.txt"
 
 def hash_password(password):
@@ -87,5 +89,21 @@ def listar_diretorio(diretorio=None):
         print(f"O diretório '{diretorio}' não foi encontrado.")
     except PermissionError:
         print(f"Permissão negada para acessar o diretório '{diretorio}'.")
+
+def Criar_arquivo(caminho_arquivo):
+
+    conteudo = ''.join(random.choices(string.ascii_letters+ string.digits,k=100))
+
+    try:
+        diretorio = os.path.dirname(caminho_arquivo)
+        if diretorio and not os.path.exists(diretorio):
+            os.makedirs(diretorio)
+
+
+        with open(caminho_arquivo, 'w')as file:
+            file.write(conteudo)
+        print(f"arquivo '{caminho_arquivo}'criado com sucesso")
+    except Exception as e :
+        print(f"erro ao criar arquivo:{e}")
 
 
