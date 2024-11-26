@@ -138,9 +138,11 @@ def listar_diretorio(diretorio=None):
         print(f"Permissão negada para acessar o diretório '{diretorio}'.")
 
 def Criar_arquivo(caminho_arquivo, username):
+    caracteres = string.ascii_letters + string.digits + string.punctuation
+    conteudo = ''.join(random.choice(caracteres) for _ in range(100))
     try:
         with open(caminho_arquivo, 'w') as file:
-            file.write("")  # Cria um arquivo vazio
+            file.write(conteudo)  
         salva_proprietario(caminho_arquivo, username)
         print(f"Arquivo '{caminho_arquivo}' criado com sucesso.")
     except Exception as e:
