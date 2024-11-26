@@ -4,6 +4,7 @@ import getpass
 import json
 import random
 import string
+import shutil
 USUARIO_FILE = "Usuarios.txt"
 
 def hash_password(password):
@@ -102,8 +103,41 @@ def Criar_arquivo(caminho_arquivo):
 
         with open(caminho_arquivo, 'w')as file:
             file.write(conteudo)
-        print(f"arquivo '{caminho_arquivo}'criado com sucesso")
+        print(f"arquivo '{caminho_arquivo}'criado com sucesso.")
     except Exception as e :
         print(f"erro ao criar arquivo:{e}")
+
+def apagar_arquivo(caminho_arquivo):
+    
+    try:
+        if os.path.exists(caminho_arquivo):
+            os.remove(caminho_arquivo)
+            print(f"arquivo '{caminho_arquivo}'apagado com sucesso.")
+        else:
+            print(f"arquivo'{caminho_arquivo}'não existe.")
+    except Exception as e:
+        print(f"erro ao apagar arquivo '{caminho_arquivo}':{e}")
+
+def criar_diretorio(caminho_diretorio):
+    
+    try:
+        os.makedirs(caminho_diretorio, exist_ok=True)
+        print(f"diretorio'{caminho_diretorio}' criado com sucesso.")
+    except Exception as e:
+        print(f"erro ao criar diretorio'{caminho_diretorio}:{e}'")
+
+def apagar_diretorio(caminho_diretorio):
+    
+    try:
+        if os.path.exists(caminho_diretorio):
+            shutil.rmtree(caminho_diretorio)
+            print(f"diretorio '{caminho_diretorio}'excluido com sucesso.")
+        else:
+            print(f"o diretorio '{caminho_diretorio} não existe'")
+
+    except Exception as e:
+        print(f"erro ao apagar diretorio'{caminho_diretorio}':{e}")
+
+
 
 
