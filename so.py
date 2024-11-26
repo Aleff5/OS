@@ -10,7 +10,8 @@ USUARIO_FILE = "Usuarios.txt"
 def hash_password(password):
     salt = os.urandom(16)
     hash_pass = hashlib.sha512(salt + password.encode()).hexdigest()
-    return hash_pass(), salt
+    return hash_pass, salt
+
 
 def SalvaUsuario (username, password):
     hash_password, salt = hash_password(password)
@@ -42,11 +43,10 @@ def VerificaLogin(username, password):
             hashed_password = hashlib.sha512(salt + password.encode()).hexdigest()
             
             # Verifica se o hash calculado é igual ao hash salvo
-            if hashed_password == user["hashed_password"]:
+            if hashed_password == user["password"]:  # Corrigido de 'hashed_password' para 'password'
                 return True
-            else:
-                return False
     return False
+
 
 
 def iniciar_shell():
@@ -178,3 +178,62 @@ def apagar_diretorio_nao_vazio(caminho_diretorio, username,  force=False):
             print(f"Erro ao apagar o diretório '{caminho_diretorio}': {e}")
     else:
         print(f"O diretório '{caminho_diretorio}' não existe.")
+        
+def main():
+    iniciar_shell()  # Realiza o login ou cadastro do usuário
+
+    username = input("Confirme seu nome de usuário para continuar: ")
+
+    while True:
+        print("\nEscolha uma opção:")
+        print("1. Listar conteúdo do diretório")
+        print("2. Criar arquivo")
+        print("3. Apagar arquivo")
+        print("4. Criar diretório")
+        print("5. Apagar diretório (vazio)")
+        print("6. Apagar diretório (não vazio)")
+        print("7. Sair")
+        
+        escolha = input("Digite o número da opção desejada: ")
+
+        if escolha == "1":
+            diretorio = input("Digite o caminho do diretório (ou pressione Enter para usar o diretório atual): ")
+            if diretorio.strip() == "":
+                listar_diretorio()
+            else:
+                listar_diretorio(diretorio)
+
+        elif escolha == "2":
+            caminho_arquivo = input("Digite o caminho do arquivo a ser criado: ")
+            Criar_arquivo(caminho_arquivo, username)
+
+        elif escolha == "3":
+            caminho_arquivo = input("Digite o caminho do arquivo a ser apagado: ")
+            apagar_arquivo(caminho_arquivo, username)
+
+        elif escolha == "4":
+            caminho_diretorio = input("Digite o caminho do diretório a ser criado: ")
+            criar_diretorio(caminho_diretorio, username)
+
+        elif escolha == "5":
+            caminho_diretorio = input("Digite o caminho do diretório a ser apagado: ")
+            apagar_diretorio(caminho_diretorio, username)
+
+        elif escolha == "6":
+            caminho_diretorio = input("Digite o caminho do diretório a ser apagado: ")
+            confirmar = input("Apagar todo o conteúdo do diretório? (s/n): ").lower()
+            if confirmar == "s":
+                apagar_diretorio_nao_vazio(caminho_diretorio, username, force=True)
+            else:
+                print("Operação cancelada.")
+
+        elif escolha == "7":
+            print("Encerrando o programa.")
+            break
+
+        else:
+            print("Opção inválida. Tente novamente.")
+
+# Chamando o main para iniciar o programa
+if __name__ == "__main__":
+    main()
