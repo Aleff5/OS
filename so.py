@@ -101,7 +101,7 @@ def listar_diretorio(diretorio=None):
     except PermissionError:
         print(f"Permissão negada para acessar o diretório '{diretorio}'.")
 
-def Criar_arquivo(caminho_arquivo):
+def Criar_arquivo(caminho_arquivo, username):
 
     conteudo = ''.join(random.choices(string.ascii_letters+ string.digits,k=100))
 
@@ -113,18 +113,23 @@ def Criar_arquivo(caminho_arquivo):
 
         with open(caminho_arquivo, 'w')as file:
             file.write(conteudo)
+        salva_proprietario(caminho_arquivo, username)
         print(f"arquivo '{caminho_arquivo}'criado com sucesso.")
     except Exception as e :
         print(f"erro ao criar arquivo:{e}")
 
-def apagar_arquivo(caminho_arquivo):
+def apagar_arquivo(caminho_arquivo, username):
     
     try:
         if os.path.exists(caminho_arquivo):
-            os.remove(caminho_arquivo)
-            print(f"arquivo '{caminho_arquivo}'apagado com sucesso.")
+            if verifica_proprietario(caminho_arquivo, username):
+                os.remove(caminho_arquivo)
+                os.remove(f"{caminho_arquivo}.owner")
+                print(f"arquivo '{caminho_arquivo}'apagado com sucesso.")
+            else:
+                print(f"arquivo'{caminho_arquivo}'não existe.")
         else:
-            print(f"arquivo'{caminho_arquivo}'não existe.")
+            print(f"o arquivo '{caminho_arquivo}'não existe.")
     except Exception as e:
         print(f"erro ao apagar arquivo '{caminho_arquivo}':{e}")
 
@@ -137,17 +142,21 @@ def criar_diretorio(caminho_diretorio, username):
     except Exception as e:
         print(f"erro ao criar diretorio'{caminho_diretorio}:{e}'")
 
-def apagar_diretorio(caminho_diretorio):
+def apagar_diretorio(caminho_diretorio, username):
     
     try:
         if os.path.exists(caminho_diretorio):
-            os.rmdir(caminho_diretorio)
-            print(f"diretorio '{caminho_diretorio}'excluido com sucesso.")
+            if verifica_proprietario(caminho_diretorio, username):
+                os.rmdir(caminho_diretorio)
+                os.remove(f"{caminho_diretorio}.owner")
+                print(f"diretorio '{caminho_diretorio}'excluido com sucesso.")
+            else:
+                print(f"o diretorio '{caminho_diretorio} não existe'")
         else:
-            print(f"o diretorio '{caminho_diretorio} não existe'")
-
-    except Exception as e:
-        print(f"erro ao apagar diretorio'{caminho_diretorio}':{e}")
+            print(f"o diretório '{caminho_diretorio}' não existe")
+    except OSError as e:
+        print(f"erro ao apagar diretório '{caminho_diretorio}': {e}")
+    
 
 def apagar_diretorio_nao_vazio(caminho_diretorio, username,  force=False):
     if os.path.exists(caminho_diretorio):
