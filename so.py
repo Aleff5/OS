@@ -10,7 +10,7 @@ USUARIO_FILE = "Usuarios.txt"
 def hash_password(password):
     salt = os.urandom(16)
     hash_pass = hashlib.sha512(salt + password.encode()).hexdigest()
-    return hash_pass, salt
+    return hash_pass(), salt
 
 def SalvaUsuario (username, password):
     hash_password, salt = hash_password(password)
@@ -72,6 +72,16 @@ def iniciar_shell():
             print("Usuário ou senha incorretos. Tente novamente.")
 
 
+def salva_proprietario(caminho_arquivo, username):
+    with open(f"{caminho_arquivo}.owner", 'w') as file:
+        file.write(username)
+
+def verifica_proprietario(caminho_arquivo, username):
+    if os.path.exists(f"{caminho_arquivo}.owner"):
+        with open(f"{caminho_arquivo}.owner", 'r') as file:
+            owner = file.read().strip()
+            return owner == username
+    return False
 
 def listar_diretorio(diretorio=None):
     if diretorio is None:
@@ -118,10 +128,11 @@ def apagar_arquivo(caminho_arquivo):
     except Exception as e:
         print(f"erro ao apagar arquivo '{caminho_arquivo}':{e}")
 
-def criar_diretorio(caminho_diretorio):
+def criar_diretorio(caminho_diretorio, username):
     
     try:
         os.makedirs(caminho_diretorio, exist_ok=True)
+        salva_proprietario(caminho_diretorio, username)
         print(f"diretorio'{caminho_diretorio}' criado com sucesso.")
     except Exception as e:
         print(f"erro ao criar diretorio'{caminho_diretorio}:{e}'")
@@ -138,15 +149,18 @@ def apagar_diretorio(caminho_diretorio):
     except Exception as e:
         print(f"erro ao apagar diretorio'{caminho_diretorio}':{e}")
 
-def apagar_diretorio_nao_vazio(caminho_diretorio, force=False):
+def apagar_diretorio_nao_vazio(caminho_diretorio, username,  force=False):
     if os.path.exists(caminho_diretorio):
         try:
-            if force:
-                shutil.rmtree(caminho_diretorio)
-                print(f"O diretório '{caminho_diretorio}' e todo o seu conteúdo foram apagados.")
+            if verifica_proprietario(caminho_diretorio, username):
+                if force:
+                    shutil.rmtree(caminho_diretorio)
+                    print(f"O diretório '{caminho_diretorio}' e todo o seu conteúdo foram apagados.")
+                else:
+                    os.rmdir(caminho_diretorio)
+                    print(f"O diretório '{caminho_diretorio}' foi apagado.")
             else:
-                os.rmdir(caminho_diretorio)
-                print(f"O diretório '{caminho_diretorio}' foi apagado.")
+                print(f"Você não possui permissão para apagar o diretório '{caminho_diretorio}'.")
         except FileNotFoundError:
             print(f"O diretório '{caminho_diretorio}' não foi encontrado.")
         except PermissionError:
