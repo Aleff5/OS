@@ -130,7 +130,7 @@ def apagar_diretorio(caminho_diretorio):
     
     try:
         if os.path.exists(caminho_diretorio):
-            shutil.rmtree(caminho_diretorio)
+            os.rmdir(caminho_diretorio)
             print(f"diretorio '{caminho_diretorio}'excluido com sucesso.")
         else:
             print(f"o diretorio '{caminho_diretorio} não existe'")
