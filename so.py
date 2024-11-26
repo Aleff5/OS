@@ -3,6 +3,7 @@
 # Aleff Matheus - 22308138;
 # Guilherme Miranda Cavalcante - 22301666;
 # Davi Pereira Araújo - 22301354
+# Bruno de Lima Marques - 22309108
 
 import os
 import hashlib
