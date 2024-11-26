@@ -138,6 +138,20 @@ def apagar_diretorio(caminho_diretorio):
     except Exception as e:
         print(f"erro ao apagar diretorio'{caminho_diretorio}':{e}")
 
-
-
-
+def apagar_diretorio_nao_vazio(caminho_diretorio, force=False):
+    if os.path.exists(caminho_diretorio):
+        try:
+            if force:
+                shutil.rmtree(caminho_diretorio)
+                print(f"O diretório '{caminho_diretorio}' e todo o seu conteúdo foram apagados.")
+            else:
+                os.rmdir(caminho_diretorio)
+                print(f"O diretório '{caminho_diretorio}' foi apagado.")
+        except FileNotFoundError:
+            print(f"O diretório '{caminho_diretorio}' não foi encontrado.")
+        except PermissionError:
+            print(f"Você não possui permissão para apagar o diretório '{caminho_diretorio}'.")
+        except OSError as e:
+            print(f"Erro ao apagar o diretório '{caminho_diretorio}': {e}")
+    else:
+        print(f"O diretório '{caminho_diretorio}' não existe.")
