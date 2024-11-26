@@ -5,28 +5,33 @@ import json
 import random
 import string
 import shutil
+import subprocess
+
 USUARIO_FILE = "Usuarios.txt"
+
 
 def hash_password(password):
     salt = os.urandom(16)
-    hash_pass = hashlib.sha512(salt + password.encode()).hexdigest()
-    return hash_pass, salt
+    hashed_password = hashlib.sha512(salt + password.encode()).hexdigest()
+    return hashed_password, salt
 
 
-def SalvaUsuario (username, password):
-    hash_password, salt = hash_password(password)
+def SalvaUsuario(username, password):
+    hashed_password, salt = hash_password(password)
 
     userData = {
         "username": username,
         "salt": salt.hex(),
-        "password": hash_password
+        "password": hashed_password
     }
     with open(USUARIO_FILE, "a") as file:
         file.write(json.dumps(userData) + "\n")
 
+
+
 def CarregaUsuario():
     if not os.path.exists(USUARIO_FILE):
-        return[]
+        return []
     usuarios = []
 
     with open(USUARIO_FILE, 'r') as file:
@@ -34,206 +39,141 @@ def CarregaUsuario():
             usuarios.append(json.loads(line.strip()))
     return usuarios
 
+
 def VerificaLogin(username, password):
     usuarios = CarregaUsuario()
     for user in usuarios:
         if user["username"] == username:
-            # Obtém o salt e o hash do usuário
             salt = bytes.fromhex(user["salt"])
             hashed_password = hashlib.sha512(salt + password.encode()).hexdigest()
-            
-            # Verifica se o hash calculado é igual ao hash salvo
-            if hashed_password == user["password"]:  # Corrigido de 'hashed_password' para 'password'
+            if hashed_password == user["password"]:
                 return True
     return False
 
 
-
 def iniciar_shell():
-    """
-    Função inicial que verifica se há usuários cadastrados e solicita cadastro ou login.
-    """
     usuarios = CarregaUsuario()
 
     if not usuarios:
         print("Nenhum usuário encontrado. Vamos criar um novo usuário.")
         username = input("Digite um nome de usuário: ")
-        password = getpass.getpass("Digite uma senha: ")  # Oculta a senha enquanto o usuário digita
+        password = getpass.getpass("Digite uma senha: ")
         SalvaUsuario(username, password)
         print("Usuário criado com sucesso!")
     else:
         print("Login")
         username = input("Digite seu nome de usuário: ")
         password = getpass.getpass("Digite sua senha: ")
-        
+
         if VerificaLogin(username, password):
             print("Login realizado com sucesso!")
         else:
             print("Usuário ou senha incorretos. Tente novamente.")
 
 
-def salva_proprietario(caminho_arquivo, username):
-    with open(f"{caminho_arquivo}.owner", 'w') as file:
-        file.write(username)
-
-def verifica_proprietario(caminho_arquivo, username):
-    if os.path.exists(f"{caminho_arquivo}.owner"):
-        with open(f"{caminho_arquivo}.owner", 'r') as file:
-            owner = file.read().strip()
-            return owner == username
-    return False
-
-def listar_diretorio(diretorio=None):
-    if diretorio is None:
-        diretorio = os.getcwd()  
-    
+def listar_diretorio(dir1=None):
+    if dir1 is None or dir1.strip() == "":
+        dir1 = os.getcwd()
     try:
-        conteudo = os.listdir(diretorio)  
-        
-        if not conteudo:
-            print(f"O diretório '{diretorio}' está vazio.")
-        else:
-            print(f"Conteúdo de '{diretorio}':")
-            for item in conteudo:
-                print(item)
-    except FileNotFoundError:
-        print(f"O diretório '{diretorio}' não foi encontrado.")
-    except PermissionError:
-        print(f"Permissão negada para acessar o diretório '{diretorio}'.")
+        subprocess.run(["ls", dir1] if os.name != "nt" else ["dir", dir1], shell=True)
+    except Exception as e:
+        print(f"Erro ao listar diretório: {e}")
 
-def Criar_arquivo(caminho_arquivo, username):
 
-    conteudo = ''.join(random.choices(string.ascii_letters+ string.digits,k=100))
-
+def criar_arquivo(caminho_arquivo):
+    conteudo = ''.join(random.choices(string.ascii_letters + string.digits, k=100))
     try:
         diretorio = os.path.dirname(caminho_arquivo)
         if diretorio and not os.path.exists(diretorio):
             os.makedirs(diretorio)
-
-
-        with open(caminho_arquivo, 'w')as file:
+        with open(caminho_arquivo, 'w') as file:
             file.write(conteudo)
-        salva_proprietario(caminho_arquivo, username)
-        print(f"arquivo '{caminho_arquivo}'criado com sucesso.")
-    except Exception as e :
-        print(f"erro ao criar arquivo:{e}")
+        print(f"Arquivo '{caminho_arquivo}' criado com sucesso.")
+    except Exception as e:
+        print(f"Erro ao criar arquivo: {e}")
 
-def apagar_arquivo(caminho_arquivo, username):
-    
+
+def apagar_arquivo(caminho_arquivo):
     try:
         if os.path.exists(caminho_arquivo):
-            if verifica_proprietario(caminho_arquivo, username):
-                os.remove(caminho_arquivo)
-                os.remove(f"{caminho_arquivo}.owner")
-                print(f"arquivo '{caminho_arquivo}'apagado com sucesso.")
-            else:
-                print(f"arquivo'{caminho_arquivo}'não existe.")
+            os.remove(caminho_arquivo)
+            print(f"Arquivo '{caminho_arquivo}' apagado com sucesso.")
         else:
-            print(f"o arquivo '{caminho_arquivo}'não existe.")
+            print(f"Arquivo '{caminho_arquivo}' não existe.")
     except Exception as e:
-        print(f"erro ao apagar arquivo '{caminho_arquivo}':{e}")
+        print(f"Erro ao apagar arquivo: {e}")
 
-def criar_diretorio(caminho_diretorio, username):
-    
+
+def criar_diretorio(caminho_diretorio):
     try:
         os.makedirs(caminho_diretorio, exist_ok=True)
-        salva_proprietario(caminho_diretorio, username)
-        print(f"diretorio'{caminho_diretorio}' criado com sucesso.")
+        print(f"Diretório '{caminho_diretorio}' criado com sucesso.")
     except Exception as e:
-        print(f"erro ao criar diretorio'{caminho_diretorio}:{e}'")
+        print(f"Erro ao criar diretório: {e}")
 
-def apagar_diretorio(caminho_diretorio, username):
-    
+
+def apagar_diretorio(caminho_diretorio, force=False):
     try:
-        if os.path.exists(caminho_diretorio):
-            if verifica_proprietario(caminho_diretorio, username):
-                os.rmdir(caminho_diretorio)
-                os.remove(f"{caminho_diretorio}.owner")
-                print(f"diretorio '{caminho_diretorio}'excluido com sucesso.")
-            else:
-                print(f"o diretorio '{caminho_diretorio} não existe'")
+        if force:
+            shutil.rmtree(caminho_diretorio)
+            print(f"Diretório '{caminho_diretorio}' e todo o seu conteúdo foram apagados.")
         else:
-            print(f"o diretório '{caminho_diretorio}' não existe")
-    except OSError as e:
-        print(f"erro ao apagar diretório '{caminho_diretorio}': {e}")
-    
+            os.rmdir(caminho_diretorio)
+            print(f"Diretório '{caminho_diretorio}' apagado com sucesso.")
+    except Exception as e:
+        print(f"Erro ao apagar diretório: {e}")
 
-def apagar_diretorio_nao_vazio(caminho_diretorio, username,  force=False):
-    if os.path.exists(caminho_diretorio):
-        try:
-            if verifica_proprietario(caminho_diretorio, username):
-                if force:
-                    shutil.rmtree(caminho_diretorio)
-                    print(f"O diretório '{caminho_diretorio}' e todo o seu conteúdo foram apagados.")
-                else:
-                    os.rmdir(caminho_diretorio)
-                    print(f"O diretório '{caminho_diretorio}' foi apagado.")
-            else:
-                print(f"Você não possui permissão para apagar o diretório '{caminho_diretorio}'.")
-        except FileNotFoundError:
-            print(f"O diretório '{caminho_diretorio}' não foi encontrado.")
-        except PermissionError:
-            print(f"Você não possui permissão para apagar o diretório '{caminho_diretorio}'.")
-        except OSError as e:
-            print(f"Erro ao apagar o diretório '{caminho_diretorio}': {e}")
-    else:
-        print(f"O diretório '{caminho_diretorio}' não existe.")
-        
+
 def main():
-    iniciar_shell()  # Realiza o login ou cadastro do usuário
-
-    username = input("Confirme seu nome de usuário para continuar: ")
+    iniciar_shell()
+    print("Bem-vindo ao gerenciador de comandos! Digite 'sair' para encerrar.")
 
     while True:
-        print("\nEscolha uma opção:")
-        print("1. Listar conteúdo do diretório")
-        print("2. Criar arquivo")
-        print("3. Apagar arquivo")
-        print("4. Criar diretório")
-        print("5. Apagar diretório (vazio)")
-        print("6. Apagar diretório (não vazio)")
-        print("7. Sair")
-        
-        escolha = input("Digite o número da opção desejada: ")
+        comando = input("\nDigite um comando: ").strip()
 
-        if escolha == "1":
-            diretorio = input("Digite o caminho do diretório (ou pressione Enter para usar o diretório atual): ")
-            if diretorio.strip() == "":
+        if comando.startswith("listar"):
+            partes = comando.split()
+            if len(partes) == 1:
                 listar_diretorio()
             else:
-                listar_diretorio(diretorio)
+                listar_diretorio(partes[1])
 
-        elif escolha == "2":
-            caminho_arquivo = input("Digite o caminho do arquivo a ser criado: ")
-            Criar_arquivo(caminho_arquivo, username)
-
-        elif escolha == "3":
-            caminho_arquivo = input("Digite o caminho do arquivo a ser apagado: ")
-            apagar_arquivo(caminho_arquivo, username)
-
-        elif escolha == "4":
-            caminho_diretorio = input("Digite o caminho do diretório a ser criado: ")
-            criar_diretorio(caminho_diretorio, username)
-
-        elif escolha == "5":
-            caminho_diretorio = input("Digite o caminho do diretório a ser apagado: ")
-            apagar_diretorio(caminho_diretorio, username)
-
-        elif escolha == "6":
-            caminho_diretorio = input("Digite o caminho do diretório a ser apagado: ")
-            confirmar = input("Apagar todo o conteúdo do diretório? (s/n): ").lower()
-            if confirmar == "s":
-                apagar_diretorio_nao_vazio(caminho_diretorio, username, force=True)
+        elif comando.startswith("criar arquivo"):
+            partes = comando.split(maxsplit=2)
+            if len(partes) < 3:
+                print("Erro: Caminho do arquivo não especificado.")
             else:
-                print("Operação cancelada.")
+                criar_arquivo(partes[2])
 
-        elif escolha == "7":
-            print("Encerrando o programa.")
+        elif comando.startswith("apagar arquivo"):
+            partes = comando.split(maxsplit=2)
+            if len(partes) < 3:
+                print("Erro: Caminho do arquivo não especificado.")
+            else:
+                apagar_arquivo(partes[2])
+
+        elif comando.startswith("criar diretorio"):
+            partes = comando.split(maxsplit=2)
+            if len(partes) < 3:
+                print("Erro: Caminho do diretório não especificado.")
+            else:
+                criar_diretorio(partes[2])
+
+        elif comando.startswith("apagar diretorio"):
+            partes = comando.split(maxsplit=3)
+            if len(partes) < 3:
+                print("Erro: Caminho do diretório não especificado.")
+            else:
+                force = len(partes) == 4 and partes[3] == "--force"
+                apagar_diretorio(partes[2], force=force)
+
+        elif comando == "sair":
+            print("Encerrando o programa. Até logo!")
             break
 
         else:
-            print("Opção inválida. Tente novamente.")
+            print("Comando inválido. Tente novamente.")
 
-# Chamando o main para iniciar o programa
+
 if __name__ == "__main__":
     main()
