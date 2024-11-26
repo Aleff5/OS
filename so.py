@@ -1,3 +1,9 @@
+# Davi Santos Pacini - 22300504;
+# Bruno Monteiro Fonseca - 22305939;
+# Aleff Matheus - 22308138;
+# Guilherme Miranda Cavalcante - 22301666;
+# Davi Pereira Araújo - 22301354
+
 import os
 import hashlib
 import getpass
