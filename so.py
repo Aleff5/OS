@@ -16,52 +16,71 @@ USUARIO_FILE = "Usuarios.txt"
 METADATA_FILE = "metadata.json"
 
 def hash_password(password):
-    salt = os.urandom(16)
-    hashed_password = hashlib.sha512(salt + password.encode()).hexdigest()
-    return hashed_password, salt
+    salt = os.urandom(16).hex()  # Salt convertido para hexadecimal
+    hashed_password = hashlib.sha512((salt + password).encode()).hexdigest()
+    # Formato: algoritmo$salt$hash
+    return f"$6${salt}${hashed_password}"
 
 
-def SalvaUsuario (username, password):
-    hashed_password, salt = hash_password(password)
-
-    userData = {
-        "username": username,
-        "salt": salt.hex(),
-        "password": hashed_password
-    }
+def SalvaUsuario(username, password):
+    # Gera o salt como uma string de 16 caracteres aleatórios
+    salt = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    # Calcula o hash da senha concatenada com o salt
+    hashed_password = hashlib.sha512((salt + password).encode()).hexdigest()
+    # Escreve no arquivo no formato: username:$6$salt$hash
     with open(USUARIO_FILE, "a") as file:
-        file.write(json.dumps(userData) + "\n")
+        file.write(f"{username}:$6${salt}${hashed_password}\n")
 
 def CarregaUsuario():
     if not os.path.exists(USUARIO_FILE):
-        return[]
+        return []
+    
     usuarios = []
-
-    with open(USUARIO_FILE, 'r') as file:
+    with open(USUARIO_FILE, "r") as file:
         for line in file:
-            usuarios.append(json.loads(line.strip()))
+            line = line.strip()  # Remove espaços extras e quebras de linha
+            if line:  # Ignora linhas vazias
+                # Divide a linha no formato esperado: username:$6$salt$hash
+                try:
+                    username, hashed_data = line.split(":", 1)
+                    # Verifica se o hash segue o formato correto: $6$salt$hash
+                    parts = hashed_data.split("$")
+                    if len(parts) == 4 and parts[1] == "6":
+                        usuarios.append({"username": username, "hashed_data": hashed_data})
+                    else:
+                        print(f"Formato inválido para o usuário '{username}'. Ignorando... (hashed_data: {hashed_data})")
+                except ValueError:
+                    print(f"Erro ao processar linha: {line}")
+    # print(f"Usuários carregados: {usuarios}")
     return usuarios
 
 def VerificaLogin(username, password):
     usuarios = CarregaUsuario()
-    for user in usuarios:
-        if user["username"] == username:
-            # Obtém o salt e o hash do usuário
-            salt = bytes.fromhex(user["salt"])
-            hashed_password = hashlib.sha512(salt + password.encode()).hexdigest()
-            
-            # Verifica se o hash calculado é igual ao hash salvo
-            if hashed_password == user["password"]:  # Corrigido de 'hashed_password' para 'password'
+    if not usuarios:
+        print("Nenhum usuário encontrado. Vamos criar um novo usuário.")
+        return False
+    for usuario in usuarios:
+        if usuario["username"] == username:
+            salt = usuario["hashed_data"].split("$")[2]
+            hashed_password = hashlib.sha512((salt + password).encode()).hexdigest()
+            if usuario["hashed_data"] == f"$6${salt}${hashed_password}":
+                # print("Login bem-sucedido!")
                 return True
+            else:
+                print("Senha incorreta.")
+                return False
+    print("Usuário não encontrado.")
     return False
 
+
+
+# Função para criar um novo usuário
 def criar_novo_usuario():
     username = input("Digite um nome de usuário: ")
     password = getpass.getpass("Digite uma senha: ")
     SalvaUsuario(username, password)
     print("Usuário criado com sucesso!")
     return username
-    
 
 
 def iniciar_shell():
@@ -262,6 +281,8 @@ def main():
         else:
             print("Comando inválido. Tente novamente.")
 
-# Chamando o main para iniciar o programa
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Erro fatal: {e}")
